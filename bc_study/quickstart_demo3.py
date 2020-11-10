@@ -13,18 +13,16 @@
 
 '''
 import backtrader as bt
-import os, sys, datetime
-import bc_study.data_downloader as dl
-import pandas as pd
+import bc_study.tushare_csv_datafeed as ts_df
 
 
 # 演示用策略，每日输出开盘价
 class TestStrategy(bt.Strategy):
 
-    def log(self, txt, dt=None):
+    def log(self, text, dt=None):
         ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
+        print('%s, %s' % (dt.isoformat(), text))
 
     def __init__(self):
         # Keep a reference to the "open" line in the data[0] dataseries
@@ -70,29 +68,6 @@ class TestStrategy(bt.Strategy):
         # next中只是下单，还未成交
         print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
 
-# 加载数据
-def get_data():
-    """取得数据包
-    """
-
-    # 加载数据
-    start = "20190101"
-    end = "20190131"
-    stock_id = "600016.SH"
-    file_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '../fd_data/') + stock_id + ".csv"
-    if not os.path.exists(file_path):
-        dl.stock_daily_to_csv(stock_id, start, end)
-
-    # 数据清洗
-    df = pd.read_csv(filepath_or_buffer=file_path)
-    df.sort_values(by=["trade_date"], ascending=True, inplace=True)    # 按日期先后排序
-    df.index = pd.to_datetime(df.trade_date, format='%Y%m%d')
-    df['openinterest']=0
-    df=df[['open','high','low','close','vol','openinterest']]
-    # print(df.shape[0])
-    data = bt.feeds.PandasData(dataname = df, fromdate = datetime.datetime(2019, 1, 1), todate = datetime.datetime(2019, 1, 31))
-    return data
-
 
 # 启动回测
 def engine_run():
@@ -105,8 +80,8 @@ def engine_run():
     # 设置初始资金：
     cerebro.broker.setcash(200000.0)
 
-    # 从csv文件加载数据    
-    data = get_data()
+    # 从csv文件加载数据
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH")
     cerebro.adddata(data)
 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -114,7 +89,7 @@ def engine_run():
     cerebro.run()
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
+
 if __name__ == '__main__':
     # get_data()
     engine_run()
-    

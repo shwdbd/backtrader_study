@@ -10,6 +10,7 @@
 
 买入的尝试，如果价格连续跌两天则买入，如果持仓5天则卖出
 
+加入手续费的概念
 
 '''
 import backtrader as bt
@@ -30,7 +31,9 @@ class TestStrategy(bt.Strategy):
         print("TestStrategy init function called")
 
     def notify_order(self, order):
-        # self.log("func notify_order :")
+        self.log("notify_order :\n{0}".format(order))
+        # self.log("notify_order()")
+
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
@@ -51,9 +54,21 @@ class TestStrategy(bt.Strategy):
         # Write down: no pending order
         self.order = None
 
+    def notify_trade(self, trade):
+        self.log("notify_trade :\n{0}".format(trade))
+        # self.log("notify_trade()")
+
+        if not trade.isclosed:
+            return
+
+        self.log('OPERATION PROFIT, GROSS %.2f, NET %.2f' %
+                 (trade.pnl, trade.pnlcomm))
+
     def next(self):
         # Simply log the closing price of the series from the reference
         self.log('Open, %.2f' % self.dataopen[0])
+        # self.log('LEN OF STY = {0}'.format( len(self) ))
+        # self.log('position = {0}'.format( self.position ))
 
         if not self.position:
             if self.dataopen[0] < self.dataopen[-1]:
@@ -76,9 +91,8 @@ class TestStrategy(bt.Strategy):
         # next中只是下单，还未成交
         # print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
 
+
 # 启动回测
-
-
 def engine_run():
     # 初始化引擎
     cerebro = bt.Cerebro()
@@ -88,6 +102,8 @@ def engine_run():
 
     # 设置初始资金：
     cerebro.broker.setcash(200000.0)
+    # Set the commission - 0.1% ... divide by 100 to remove the %
+    cerebro.broker.setcommission(commission=0.001)
 
     # 从csv文件加载数据
     data = ts_df.get_csv_daily_data(stock_id="600016.SH")
@@ -97,6 +113,8 @@ def engine_run():
     # 回测启动运行
     cerebro.run()
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+    # cerebro.plot()
 
 
 if __name__ == '__main__':

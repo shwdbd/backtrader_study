@@ -10,15 +10,22 @@
 
 20日均线，如果今天开盘价小于SMA则买入，大于SMA则卖
 
+具备功能：
+- 电池函数
+- 个性化参数
+
+
 '''
 import backtrader as bt
-import os, sys, datetime
-import bc_study.data_downloader as dl
-import pandas as pd
+import bc_study.tushare_csv_datafeed as ts_df
 
 
 # 最简单的SMA策略
 class SMAStrategy(bt.Strategy):
+
+    params = (
+        ('sma_window', 25),
+    )
 
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
@@ -28,44 +35,28 @@ class SMAStrategy(bt.Strategy):
     def __init__(self):
         # 建立开盘价的引用
         self.dataopen = self.datas[0].open
-        self.sma = bt.indicators.SimpleMovingAverage(self.datas[0], period=120)
+        self.sma = bt.indicators.SimpleMovingAverage(
+            self.datas[0], period=self.params.sma_window)
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log('Open, %.2f' % self.dataopen[0])
-        self.log('SMA last, %.2f' % self.sma[-1])
+        # self.log('Open, %.2f' % self.dataopen[0])
+        # self.log('SMA last, %.2f' % self.sma[-1])
 
         if not self.position:
             if self.dataopen[0] < self.sma[-1]:
                 # 买入
-                self.log('买入, 挂单价格 = %.2f' % self.dataopen[0])
+                # self.log('买入, 挂单价格 = %.2f' % self.dataopen[0])
                 self.buy()
         else:
             if self.dataopen[0] > self.sma[-1]:
                 # 卖出
-                self.log('卖出, 挂单价格 = %.2f' % self.dataopen[0])
+                # self.log('卖出, 挂单价格 = %.2f' % self.dataopen[0])
                 self.sell()
 
-# 加载数据
-def get_data():
-    """取得数据包
-    """
-
-    # 加载数据
-    stock_id = "600016.SH"
-    file_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '../fd_data/') + stock_id + ".csv"
-    if not os.path.exists(file_path):
-        dl.stock_daily_to_csv(stock_id, "20190101", "20191231")
-
-    # 数据清洗
-    df = pd.read_csv(filepath_or_buffer=file_path)
-    df.sort_values(by=["trade_date"], ascending=True, inplace=True)    # 按日期先后排序
-    df.index = pd.to_datetime(df.trade_date, format='%Y%m%d')
-    df['openinterest']=0
-    df=df[['open','high','low','close','vol','openinterest']]
-    # print(df.shape[0])
-    data = bt.feeds.PandasData(dataname = df, fromdate = datetime.datetime(2019, 1, 1), todate = datetime.datetime(2019, 12, 31))
-    return data
+    def stop(self):
+        self.log('(MA Period %2d) Ending Value %.2f' %
+                 (self.params.sma_window, self.broker.getvalue()))
 
 
 # 启动回测
@@ -81,8 +72,12 @@ def engine_run():
     # Set the commission - 0.1% ... divide by 100 to remove the %
     cerebro.broker.setcommission(commission=0.001)
 
-    # 从csv文件加载数据    
-    data = get_data()
+    periods = range(20, 120)
+    cerebro.optstrategy(SMAStrategy, sma_window=periods)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+
+    # 从csv文件加载数据
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20191231")
     cerebro.adddata(data)
 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -90,7 +85,7 @@ def engine_run():
     cerebro.run()
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
+
 if __name__ == '__main__':
     # get_data()
     engine_run()
-    

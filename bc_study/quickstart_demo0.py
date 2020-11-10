@@ -8,8 +8,8 @@
 @Contact :   shwangjj@163.com
 @Desc    :   官方QuickStart第一个示例
 '''
-
 import backtrader as bt
+
 
 if __name__ == '__main__':
     # 初始化引擎
@@ -21,6 +21,9 @@ if __name__ == '__main__':
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # 回测启动运行
-    cerebro.run()
+    result = cerebro.run()
+    print(result)
 
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+    cerebro.plot()

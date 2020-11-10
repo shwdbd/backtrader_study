@@ -12,7 +12,7 @@
 
 '''
 import backtrader as bt
-import os, sys, datetime
+import bc_study.tushare_csv_datafeed as ts_df
 
 
 if __name__ == '__main__':
@@ -22,27 +22,8 @@ if __name__ == '__main__':
     cerebro.broker.setcash(200000.0)
 
     # 从csv文件中读取数据
-    # 计算当前执行文件的目录
-    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # print(modpath)
-    datapath = os.path.join(modpath, '../fd_data/600016.SH.csv')
-    # 从csv文件中读取
-    data = bt.feeds.GenericCSVData(
-        dataname='mydata.csv',
-        fromdate=datetime.datetime(2000, 1, 1),
-        todate=datetime.datetime(2000, 12, 31),
-        nullvalue=0.0,
-        dtformat=('%Y-%m-%d'),
-        datetime=0,
-        high=3,
-        low=4,
-        open=2,
-        close=5,
-        volume=9,
-        openinterest=-1
-    )
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH")
     print(data)
-
 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 

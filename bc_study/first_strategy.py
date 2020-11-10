@@ -9,22 +9,20 @@
 @Desc    :   第一个测试用策略，打印当日收盘价
 '''
 import backtrader as bt
-import datetime
-import sys
-import pandas as pd
-import tushare as ts
+import bc_study.tushare_csv_datafeed as ts_df
 
 
 class MyStrategy(bt.Strategy):
 
     def __init__(self):
-        #引用data[0]中的收盘价格数据
-        self.dataclose = self.datas[0].close    # backtrader.linebuffer.LineBuffer
+        # 引用data[0]中的收盘价格数据
+        # backtrader.linebuffer.LineBuffer
+        self.dataclose = self.datas[0].close
         print(self.dataclose)
         print("init")
         pass
 
-    def log(self, txt, dt = None):
+    def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
         print("%s, %s" % (dt.isoformat(), txt))
 
@@ -33,41 +31,16 @@ class MyStrategy(bt.Strategy):
         # self.log("next函数, Close, %.2f" % self.dataclose[0])
         pass
 
-def get_data():
-    """取得数据包
-    """
-    TOKEN = '341d66d4586929fa56f3f987e6c0d5bd23fb2a88f5a48b83904d134b'
-    ts.set_token(TOKEN)
-    pro = ts.pro_api()
-
-    # 加载数据
-    start = "2020-01-01"
-    end = "2020-01-31"
-    #df = ts.get_k_data("510300", autype = "qfq", start = start,  end = end)
-    df = pro.daily(ts_code='600016.SH', start_date='20200101', end_date='20200131')
-    df.sort_values(by=["trade_date"], ascending=True, inplace=True)    # 按日期先后排序
-    df.index = pd.to_datetime(df.trade_date)
-    df['openinterest']=0
-    df=df[['open','high','low','close','vol','openinterest']]
-    # print(df.head())
-    data = bt.feeds.PandasData(dataname = df, fromdate = datetime.datetime(2020, 1, 1), todate = datetime.datetime(2020, 1, 31))
-    return data
-
-# if __name__ == "__main__":
-#     df = get_data()
-#     print(df)
-
 
 if __name__ == "__main__":
-    #初始化Cebro引擎
+    # 初始化Cebro引擎
     cerebro = bt.Cerebro()
 
     # 给Cebro引擎添加策略
     cerebro.addstrategy(MyStrategy)
 
     # # 给Cebro引擎添加数据
-    # data = bt.feeds.YahooFinanceCSVData(dataname='TSLA.csv')
-    data = get_data()
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH")
     print(data)
     cerebro.adddata(data)
 

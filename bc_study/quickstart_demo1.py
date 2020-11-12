@@ -8,7 +8,7 @@
 @Contact :   shwangjj@163.com
 @Desc    :   官方QuickStart第2个示例
 
-在Demo1基础上，增加DataFeed数据源的使用
+在Demo0基础上，增加DataFeed数据源的使用
 
 '''
 import backtrader as bt
@@ -23,11 +23,18 @@ if __name__ == '__main__':
 
     # 从csv文件中读取数据
     data = ts_df.get_csv_daily_data(stock_id="600016.SH")
-    print(data)
+    print("回测用数据对象 = {0} / {1},".format(type(data), data))
+    cerebro.adddata(data)
+    print("Cerebro加载数据成功")
+    # backtrader.feeds.pandafeed.PandasData
+    print("Cerebro's data obj= {0}".format(cerebro.datas[0]))
+    # TODO DataFeed对象无法访问其属性
 
-    print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    print('初始市值: %.2f' % cerebro.broker.getvalue())
 
     # 回测启动运行
-    cerebro.run()
+    result = cerebro.run()
+    # 因为有了数据，则返回一个Strategy对象的list
+    print("回测运行返回值 = {0}".format(result))
 
-    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    print('期末市值: %.2f' % cerebro.broker.getvalue())

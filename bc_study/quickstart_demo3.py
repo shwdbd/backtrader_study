@@ -6,10 +6,10 @@
 @Author  :   Jeffrey Wang
 @Version :   1.0
 @Contact :   shwangjj@163.com
-@Desc    :   官方QuickStart第1个策略示例
+@Desc    :   官方QuickStart示例代码
 
-买入的尝试，如果价格连续跌两天则买入
-
+尝试买入的策略：
+1. 买入的尝试，如果价格连续跌两天则买入
 
 '''
 import backtrader as bt
@@ -25,12 +25,16 @@ class TestStrategy(bt.Strategy):
         print('%s, %s' % (dt.isoformat(), text))
 
     def __init__(self):
-        # Keep a reference to the "open" line in the data[0] dataseries
+        print("【策略】init 函数 开始")
+        # 建立对于DataFeed的Open/Close价格的引用参数
         self.dataopen = self.datas[0].open
-        print("TestStrategy init function called")
+        self.dataclose = self.datas[0].close
+        print("【策略】init 函数 结束")
 
     def notify_order(self, order):
-        self.log("func notify_order :")
+        # 订单状态变化：
+
+        self.log("【Order通知】")
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
@@ -52,21 +56,23 @@ class TestStrategy(bt.Strategy):
         self.order = None
 
     def next(self):
-        # Simply log the closing price of the series from the reference
-        self.log('Open, %.2f' % self.dataopen[0])
+        # 输出当日价格
+        self.log('Open={0}, 昨Open={1}, 前Open={2}'.format(self.dataopen[0], self.dataopen[-1], self.dataopen[-2]))
 
         if self.dataopen[0] < self.dataopen[-1]:
-            if self.dataopen[-1] < self.dataopen[-2]:
-                # BUY, BUY, BUY!!! (with all possible default parameters)
-                self.log('BUY CREATE, %.2f' % self.dataopen[0])
-                self.buy()
+            # if self.dataopen[-1] < self.dataopen[-2]:
+            # 条件触发，BUY, BUY, BUY!!! (with all possible default parameters)
+            self.log('BUY 订单创建, 订单价=%.2f' % self.dataopen[0])
+            order = self.buy()
+            if order:
+                print("生成的订单对象：\n{0}".format(order))
 
-        if self.position:
-            print("{0}".format(self.position))
+        # if self.position:
+        #     print("{0}".format(self.position))
 
         # 打印交易后的资金市值
         # next中只是下单，还未成交
-        print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
+        # print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
 
 
 # 启动回测
@@ -81,15 +87,15 @@ def engine_run():
     cerebro.broker.setcash(200000.0)
 
     # 从csv文件加载数据
-    data = ts_df.get_csv_daily_data(stock_id="600016.SH")
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20190106")
     cerebro.adddata(data)
 
-    print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    print('初始市值: %.2f' % cerebro.broker.getvalue())
     # 回测启动运行
-    cerebro.run()
-    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    result = cerebro.run()
+    print("回测运行返回值 = {0}".format(result))
+    print('期末市值: %.2f' % cerebro.broker.getvalue())
 
 
 if __name__ == '__main__':
-    # get_data()
     engine_run()

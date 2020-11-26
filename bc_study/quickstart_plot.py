@@ -1,9 +1,18 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@File    :   quickstart_plot.py
+@Time    :   2020/11/27 00:03:01
+@Author  :   Jeffrey Wang
+@Version :   1.0
+@Contact :   shwangjj@163.com
+@Desc    :   绘制图形示例
+
+读取A股票日线数据，打印每日的close价格，并在最后绘制图形
+
+'''
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
-import datetime  # For datetime objects
-import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
 
 # Import the backtrader platform
 import backtrader as bt

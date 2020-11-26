@@ -13,6 +13,8 @@ import os
 import sys
 import datetime
 import pandas as pd
+import numpy as np
+import backtrader.feeds as btfeeds
 
 
 # 加载本地csv文件数据
@@ -45,10 +47,19 @@ def get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20191231"):
     df = pd.read_csv(filepath_or_buffer=file_path)
     df.sort_values(by=["trade_date"], ascending=True,
                    inplace=True)    # 按日期先后排序
+
+    df['datetime'] = pd.to_datetime(df.trade_date)
+
     df.index = pd.to_datetime(df.trade_date, format='%Y%m%d')
-    df['openinterest'] = 0
-    df = df[['open', 'high', 'low', 'close', 'vol', 'openinterest']]
+    df['openinterest'] = 0.00
+    df = df[['datetime', 'open', 'high', 'low', 'close', 'vol', 'openinterest']]
+    # TODO 列改名 vol -> volume
+    df.rename(columns={"vol": "volume"}, inplace=True)
+
     # print(df.shape[0])
+    # print(df.info())
+    # print(df.head())
+
     data = bt.feeds.PandasData(dataname=df, fromdate=dt_start, todate=dt_end)
     return data
 

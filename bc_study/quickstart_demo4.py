@@ -8,8 +8,9 @@
 @Contact :   shwangjj@163.com
 @Desc    :   官方QuickStart第1个策略示例
 
-买入的尝试，如果价格连续跌两天则买入，如果持仓5天则卖出
-
+尝试买卖的策略：
+1. 如果价格连续跌两天则买入
+2. 如果持仓大于等于5天则卖出
 
 '''
 import backtrader as bt
@@ -52,9 +53,10 @@ class TestStrategy(bt.Strategy):
         self.order = None
 
     def next(self):
-        # Simply log the closing price of the series from the reference
+        # 输出当日开盘价
         self.log('Open, %.2f' % self.dataopen[0])
 
+        self.log('len(self)={0}'.format(len(self)))
         if not self.position:
             if self.dataopen[0] < self.dataopen[-1]:
                 if self.dataopen[-1] < self.dataopen[-2]:
@@ -63,22 +65,15 @@ class TestStrategy(bt.Strategy):
                     self.buy()
         else:
             # Already in the market ... we might sell
+            self.log('len(self)={0}, bar_executed={1}'.format(len(self), self.bar_executed))
             if len(self) >= (self.bar_executed + 5):
                 # SELL, SELL, SELL!!! (with all possible default parameters)
                 self.log('SELL CREATE, %.2f' % self.dataopen[0])
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.sell()
 
-        # if self.position:
-        #     print("{0}".format(self.position))
-
-        # 打印交易后的资金市值
-        # next中只是下单，还未成交
-        # print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
 
 # 启动回测
-
-
 def engine_run():
     # 初始化引擎
     cerebro = bt.Cerebro()
@@ -90,7 +85,7 @@ def engine_run():
     cerebro.broker.setcash(200000.0)
 
     # 从csv文件加载数据
-    data = ts_df.get_csv_daily_data(stock_id="600016.SH")
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20190120")
     cerebro.adddata(data)
 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())

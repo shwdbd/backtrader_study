@@ -34,11 +34,12 @@ def get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20191231"):
     dt_end = datetime.datetime.strptime(end, "%Y%m%d")
 
     # 文件存放地址
-    file_path = os.path.join(os.path.dirname(os.path.abspath(
-        sys.argv[0])), '../fd_data/') + stock_id + ".csv"
+    # file_path = os.path.join(os.path.dirname(os.path.abspath(
+    #     sys.argv[0])), '../fd_data/') + stock_id + ".csv"
+    file_path = os.path.join('fd_data/' + stock_id + ".csv")
     if not os.path.exists(file_path):
-        print("数据源文件未找到！")
-        raise Exception("数据源文件未找到！")
+        print("数据源文件未找到！" + file_path)
+        raise Exception("数据源文件未找到！" + file_path)
 
     # 数据清洗
     df = pd.read_csv(filepath_or_buffer=file_path)

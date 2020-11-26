@@ -34,7 +34,7 @@ class TestStrategy(bt.Strategy):
     def notify_order(self, order):
         # 订单状态变化：
 
-        self.log("【Order通知】")
+        # self.log("【Order通知】 {0}".format(order.status))
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
@@ -43,9 +43,9 @@ class TestStrategy(bt.Strategy):
         # Attention: broker could reject order if not enough cash
         if order.status in [order.Completed]:
             if order.isbuy():
-                self.log('BUY EXECUTED, %.2f' % order.executed.price)
+                self.log('BUY EXECUTED, 执行价=%.2f' % order.executed.price)
             elif order.issell():
-                self.log('SELL EXECUTED, %.2f' % order.executed.price)
+                self.log('SELL EXECUTED, 执行价=%.2f' % order.executed.price)
 
             self.bar_executed = len(self)
 
@@ -60,19 +60,12 @@ class TestStrategy(bt.Strategy):
         self.log('Open={0}, 昨Open={1}, 前Open={2}'.format(self.dataopen[0], self.dataopen[-1], self.dataopen[-2]))
 
         if self.dataopen[0] < self.dataopen[-1]:
-            # if self.dataopen[-1] < self.dataopen[-2]:
-            # 条件触发，BUY, BUY, BUY!!! (with all possible default parameters)
-            self.log('BUY 订单创建, 订单价=%.2f' % self.dataopen[0])
-            order = self.buy()
-            if order:
-                print("生成的订单对象：\n{0}".format(order))
-
-        # if self.position:
-        #     print("{0}".format(self.position))
-
-        # 打印交易后的资金市值
-        # next中只是下单，还未成交
-        # print('Portfolio Value: %.2f' % self.cerebro.broker.getvalue())
+            if self.dataopen[-1] < self.dataopen[-2]:
+                # 条件触发，BUY, BUY, BUY!!! (with all possible default parameters)
+                self.log('BUY 订单创建, 订单价=%.2f' % self.dataopen[0])
+                order = self.buy()
+                if order:
+                    print("生成的订单对象")
 
 
 # 启动回测
@@ -87,7 +80,7 @@ def engine_run():
     cerebro.broker.setcash(200000.0)
 
     # 从csv文件加载数据
-    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20190106")
+    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20190110")
     cerebro.adddata(data)
 
     print('初始市值: %.2f' % cerebro.broker.getvalue())

@@ -80,6 +80,7 @@ def stock_basic_to_csv():
 if __name__ == "__main__":
     start = "20000101"
     end = "20201110"
-    stock_daily_to_csv(stock_id="000002.SZ", start=start, end=end)
-    stock_daily_to_csv(stock_id="600016.SH", start=start, end=end)
+    # stock_daily_to_csv(stock_id="000002.SZ", start=start, end=end)
+    # stock_daily_to_csv(stock_id="600016.SH", start=start, end=end)
+    stock_daily_to_csv(stock_id="000001.SZ", start=start, end=end)
     # stock_basic_to_csv()

@@ -11,4 +11,6 @@
 | ... | ... |
 | quickstart_plot.py | 官方QuickStart示例的绘图功能 |
 | two_stock_datafeed.py | 读取两个股票的日线数据，每日输出close价格 |
+| analyzer_process.py | 分析器流程处理示例 |
+| strategy_process.py | 策略流程处理示例 |
 | ... | ... |

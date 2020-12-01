@@ -13,6 +13,8 @@
 '''
 import backtrader as bt
 import bc_study.tushare_csv_datafeed as ts_df
+import backtrader.analyzers as btanalyzers
+import backtrader.strategies as btstrats
 
 
 class DoulbeSMAStrategy(bt.Strategy):
@@ -74,6 +76,9 @@ if __name__ == '__main__':
     # 给Cebro引擎添加策略
     cerebro.addstrategy(DoulbeSMAStrategy)
 
+    # 添加分析器
+    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+
     # 设置初始资金：
     cerebro.broker.setcash(200000.0)    # 20万元
 
@@ -86,4 +91,11 @@ if __name__ == '__main__':
     print('初始市值: %.2f' % cerebro.broker.getvalue())
     # 回测启动运行
     result = cerebro.run()
+    thestrat = result[0]
     print('期末市值: %.2f' % cerebro.broker.getvalue())
+
+    # 性能输出：
+    print('夏普率:', thestrat.analyzers.mysharpe.get_analysis())
+
+    # 绘图：
+    cerebro.plot()

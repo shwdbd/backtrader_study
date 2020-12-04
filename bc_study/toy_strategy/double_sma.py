@@ -22,7 +22,6 @@ TODO:
 import backtrader as bt
 import bc_study.tushare_csv_datafeed as ts_df
 import backtrader.analyzers as btanalyzers
-import backtrader.strategies as btstrats
 
 
 class DoulbeSMAStrategy(bt.Strategy):
@@ -30,7 +29,7 @@ class DoulbeSMAStrategy(bt.Strategy):
     双均线金叉死叉策略
     """
     # 参数：长短均线的日期
-    params = {"short_window": 10, "long_window": 20}
+    params = {"short_window": 20, "long_window": 50}
 
     def log(self, txt, dt=None):
         ''' log信息的功能'''
@@ -51,17 +50,18 @@ class DoulbeSMAStrategy(bt.Strategy):
         # 订单状态变化：
         if order.status in [order.Completed]:
             if order.isbuy():
-                self.log('BUY成交, 执行价={0}, {1}'.format(order.executed.price, order.executed.size/100))
+                self.log('BUY成交, 执行价={0}, {1}'.format(order.executed.price, order.executed.size))
             elif order.issell():
-                self.log('SELL成交, 执行价={0}, {1}'.format(order.executed.price, order.executed.size/100))
+                self.log('SELL成交, 执行价={0}, {1}'.format(order.executed.price, order.executed.size))
+
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+
+        self.log('交易结束, 毛利润 %.2f, 净利润 %.2f' %
+                 (trade.pnl, trade.pnlcomm))
 
     def next(self):
-        # 判断金叉、死叉
-        # self.log('Open={0}, Close={1}'.format(
-        #     self.dataopen[0], self.dataclose[0]))
-        # self.log('Short SMA={0}, Long SMA={1}'.format(
-        #     self.short_ma[0], self.long_ma[0]))
-
         # 当前持有头寸
         size = self.getposition(self.datas[0]).size
 
@@ -69,12 +69,12 @@ class DoulbeSMAStrategy(bt.Strategy):
         if size == 0 and self.short_ma[-1] < self.long_ma[-1] and self.short_ma[0] > self.long_ma[0]:
             # 开仓
             # self.order_target_value(self.datas[0]*, target=5)
-            self.buy(size=100*50)
-            self.log("开仓, Short SMA={0}, Long SMA={1}".format(self.short_ma[-1], self.long_ma[0]))
+            order = self.buy(size=100*5)
+            self.log("金叉，买{0}, Short SMA yes={1}, Long SMA today={2}".format(order.size, self.short_ma[-1], self.long_ma[0]))
         # 平多
         if size > 0 and self.short_ma[-1] > self.long_ma[-1] and self.short_ma[0] < self.long_ma[0]:
-            self.close(self.datas[0])
-            self.log("平多, Short SMA={0}, Long SMA={1}".format(self.short_ma[-1], self.long_ma[0]))
+            order = self.close(self.datas[0])
+            self.log("死叉，卖{0}, Short SMA yes={1}, Long SMA today={2}".format(order.size, self.short_ma[-1], self.long_ma[0]))
 
 
 if __name__ == '__main__':
@@ -88,12 +88,12 @@ if __name__ == '__main__':
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
 
     # 设置初始资金：
-    cerebro.broker.setcash(200000.0)    # 20万元
+    cerebro.broker.setcash(100000.0)    # 10万元
 
     # 从csv文件加载数据
     # 仅3天数据
     data = ts_df.get_csv_daily_data(
-        stock_id="600016.SH", start="20150101", end="20150630")
+        stock_id="000001.SZ", start="20150101", end="20161231")
     cerebro.adddata(data)
 
     print('初始市值: %.2f' % cerebro.broker.getvalue())
@@ -106,4 +106,4 @@ if __name__ == '__main__':
     print('夏普率:', thestrat.analyzers.mysharpe.get_analysis())
 
     # 绘图：
-    # cerebro.plot()
+    cerebro.plot()

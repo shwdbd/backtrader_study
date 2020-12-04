@@ -1,51 +1,27 @@
-# 5 引擎和策略（Cerebro & Strategy）
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@File    :   double_strategy.py
+@Time    :   2020/12/03 15:05:41
+@Author  :   Jeffrey Wang
+@Version :   1.0
+@Contact :   shwangjj@163.com
+@Desc    :   尝试，同时运行两个策略
 
-- Cerebro和相关组件关系
-- Cerebro.run
-- 策略类Strategy结构
-- 策略的执行顺序
-- data line的调用
-- 策略Signals技术
-- 数据的预加载
-- Broker
-  - 滑点
-  - 佣金
+- 两个策略，分别在第3，5日买入，第4，6日平仓
 
-## 策略的执行流程
+- 一个Analyzer是否可以针对两个策略？
 
-策略执行的过程中，Strategy实现类的各函数相应被调用，其调用顺序如下图所示：
+执行顺序: A、B策略交替执行
+返回值：list，N个result对象
+共享一个broker
+分析器是针对每个策略，都执行一遍
 
-![image-20201130170524360](5 引擎和策略（Cerebro & Strategy）.assets/image-20201130170524360.png)
-
-说明：
-
-- 如在 __init__() 中计算了SMA等需要窗口时间的指标，如窗口期还未结束则调用prenext，结束了调用next。
-
-## 策略+分析器的执行流程
-
-当回测中既有策略（Strategy）也有分析器（Analyzer）的时候，各函数回测调用顺序如下图：
-
-![image-20201130174102919](5 引擎和策略（Cerebro & Strategy）.assets/image-20201130174102919.png)
-
-
-
-## 多个策略同时运行的情况
-
-Cerebro有addstrategy函数，可支持多个策略同时运行。多策略如何运行，先抛结论，后面有实现代码：
-
-- 一个Cerebro可以添加多个策略，run()后将返回多个结果的列表；
-- 在每个Bar中，多个策略依次执行；
-- 由于Broker只有一个，多个策略共享一个资金池；
-- 分析器将在每个策略运行都都运行一次，即一个分析器可处理跨策略的性能。
-
-我们直接看代码效果：
-
-```python
+'''
 import backtrader as bt
 import bc_study.tushare_csv_datafeed as ts_df
 from backtrader import Analyzer
 
-# 本案例中，将执行两个策略（策略A和策略B）、一个分析器
 
 # 策略A，3日买，5日卖
 class MyStrategy_A(bt.Strategy):
@@ -147,4 +123,3 @@ def engine_run():
 
 if __name__ == '__main__':
     engine_run()
-```

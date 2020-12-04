@@ -10,6 +10,14 @@
 
 使用民生银行2015年数据，做长短双均线交易
 
+TODO:
+1. 记录每次Trade的 胜负结果、盈亏数字
+2. 计算总的Shape比率   Analyzer
+3. 参数优化(长短周期的参数)
+4. 图形输出
+5. 动态计算sizer
+6. 增加 notify_trade
+
 '''
 import backtrader as bt
 import bc_study.tushare_csv_datafeed as ts_df
@@ -19,9 +27,9 @@ import backtrader.strategies as btstrats
 
 class DoulbeSMAStrategy(bt.Strategy):
     """
-    双均线策略
+    双均线金叉死叉策略
     """
-
+    # 参数：长短均线的日期
     params = {"short_window": 10, "long_window": 20}
 
     def log(self, txt, dt=None):
@@ -37,6 +45,7 @@ class DoulbeSMAStrategy(bt.Strategy):
             self.datas[0].close, period=self.p.short_window)
         self.long_ma = bt.indicators.SMA(
             self.datas[0].close, period=self.p.long_window)
+        self.log("完成 长[{0}]短[{1}]SMA 数据的计算".format(self.p.short_window, self.p.long_window))
 
     def notify_order(self, order):
         # 订单状态变化：
@@ -53,6 +62,7 @@ class DoulbeSMAStrategy(bt.Strategy):
         # self.log('Short SMA={0}, Long SMA={1}'.format(
         #     self.short_ma[0], self.long_ma[0]))
 
+        # 当前持有头寸
         size = self.getposition(self.datas[0]).size
 
         # 做多
@@ -60,13 +70,11 @@ class DoulbeSMAStrategy(bt.Strategy):
             # 开仓
             # self.order_target_value(self.datas[0]*, target=5)
             self.buy(size=100*50)
-            self.log("开仓")
-            self.log('Short SMA={0}, Long SMA={1}'.format(self.short_ma[-1], self.long_ma[0]))
+            self.log("开仓, Short SMA={0}, Long SMA={1}".format(self.short_ma[-1], self.long_ma[0]))
         # 平多
         if size > 0 and self.short_ma[-1] > self.long_ma[-1] and self.short_ma[0] < self.long_ma[0]:
             self.close(self.datas[0])
-            self.log("平多")
-            self.log('Short SMA={0}, Long SMA={1}'.format(self.short_ma[-1], self.long_ma[0]))
+            self.log("平多, Short SMA={0}, Long SMA={1}".format(self.short_ma[-1], self.long_ma[0]))
 
 
 if __name__ == '__main__':
@@ -85,7 +93,7 @@ if __name__ == '__main__':
     # 从csv文件加载数据
     # 仅3天数据
     data = ts_df.get_csv_daily_data(
-        stock_id="600016.SH", start="20100101", end="20150630")
+        stock_id="600016.SH", start="20150101", end="20150630")
     cerebro.adddata(data)
 
     print('初始市值: %.2f' % cerebro.broker.getvalue())
@@ -98,4 +106,4 @@ if __name__ == '__main__':
     print('夏普率:', thestrat.analyzers.mysharpe.get_analysis())
 
     # 绘图：
-    cerebro.plot()
+    # cerebro.plot()

@@ -1,8 +1,8 @@
-# 第一章 一天入门BackTrader
+# BT从入门到赚钱(一) 一天入门BackTrader
 
 本章节的目的是让读者用一天的时间（约4-5小时）对BackTrader有个初步了解，搭建第一个HelloWorld级的回测代码，引导完成官方的QuickStart示例。
 
-这个系列文章，默认读者具备初步的量化投资和Python编程的知识背景。
+这个系列文章，默认读者具备初步的量化投资概念和Python编程的初步知识背景。
 
 [TOC]
 
@@ -53,13 +53,18 @@ backtrader的安装可参考：[Installation - Backtrader](https://www.backtrade
 ## 官方QuickStart的实现
 
 HelloWorld只是给了一个最简单的、可运行的示例，在Backtrader官网上有一个完整的[QuikcStart](https://www.backtrader.com/docu/quickstart/quickstart/)的Demo程序。
-这个QuickStart逻辑清晰，如能跑通则对BackTrader将有一个较为全面的了解，所以强烈推荐完成这个QuickStart。
+这个QuickStart逻辑清晰，初学者跟着跑一遍对BackTrader将有一个较为全面的了解，所以强烈推荐完成这个QuickStart。
 
 新入坑者常常被QuickStart的数据源部分卡住，导致无法继续执行。官方代码中使用的是Yahoo的数据源，交易对象是美股。而针对国内小伙伴，更希望（也被迫）有一个友好的、国内数据源。我推荐的是用tushare在线数据api。
 
 用下面的代码，更换QuickData中data对象生成部分：
 
 ```python
+import backtrader as bt
+import datetime
+import pandas as pd
+import backtrader.feeds as btfeeds
+
 # 取得Data Feed对象
 def get_tushare_online_daily_data():
     """将A股票日线数据返回BT Data

@@ -13,11 +13,7 @@ import os
 import datetime
 import pandas as pd
 import backtrader.feeds as btfeeds
-
-import sys
 import tushare as ts
-
-
 
 
 # 加载本地csv文件数据
@@ -102,7 +98,7 @@ def get_tushare_online_daily_data():
 
     try:
         # 加载数据
-        df = pro.daily(ts_code=stock_id, start_date=start, end_date='end')
+        df = pro.daily(ts_code=stock_id, start_date=start, end_date=end)
         df.sort_values(by=["trade_date"], ascending=True,
                        inplace=True)    # 按日期先后排序
         df.reset_index(inplace=True, drop=True)

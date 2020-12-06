@@ -14,3 +14,10 @@
 | analyzer_process.py | 分析器流程处理示例 |
 | strategy_process.py | 策略流程处理示例 |
 | ... | ... |
+
+## demo包
+
+| 文件名 | 说明 |
+|--|--|
+| order_exectype.py | 订单执行方式示例 |
+| datafeed_create.py | 建立数据源示例 |

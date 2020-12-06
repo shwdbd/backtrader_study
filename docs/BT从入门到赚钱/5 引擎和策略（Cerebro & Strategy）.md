@@ -1,5 +1,41 @@
 # 5 引擎和策略（Cerebro & Strategy）
 
+## 策略
+
+### 策略生命周期
+
+### 下单
+
+### 信息点
+
+len(self)
+
+### 策略参数
+
+定义和访问
+
+### 观察者模式
+
+notify_order(order)
+notify_trade(trade)
+notify_cashvalue(cash, value)
+
+
+## Broker
+
+### 现金
+
+### 滑点
+
+### 手续费
+
+### Position
+
+### Trade
+
+
+
+
 - Cerebro和相关组件关系
 - Cerebro.run
 - 策略类Strategy结构
@@ -34,7 +70,7 @@
 Cerebro有addstrategy函数，可支持多个策略同时运行。多策略如何运行，先抛结论，后面有实现代码：
 
 - 一个Cerebro可以添加多个策略，run()后将返回多个结果的列表；
-- 在每个Bar中，多个策略依次执行；
+- 在每个运行周期中，多个策略依次执行；
 - 由于Broker只有一个，多个策略共享一个资金池；
 - 分析器将在每个策略运行都都运行一次，即一个分析器可处理跨策略的性能。
 

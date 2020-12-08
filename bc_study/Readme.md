@@ -21,3 +21,5 @@
 |--|--|
 | order_exectype.py | 订单执行方式示例 |
 | datafeed_create.py | 建立数据源示例 |
+| strategy_len_self.py | 试验len(self)的计算 |
+| strategy_params.py | 策略参数的访问 |

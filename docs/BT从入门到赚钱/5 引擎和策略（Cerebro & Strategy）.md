@@ -1,18 +1,99 @@
 # 5 引擎和策略（Cerebro & Strategy）
 
-## 策略
+这里我们将讨论backtrade的核心：Cerebro和Strategy。
+
+Cerebro就是回测的调度者，负责组织各个模块进行协作。作为开发者，我们必须写一个继承Strategy的子类，实现具体的交易逻辑。
+
+下面先讨论Strategy，即我们如何将交易想法用代码方式进行实现，然后再讨论Cerebro，即如何去执行回测的策略代码。
+
+## 策略 Strategy
 
 ### 策略生命周期
 
-### 下单
+我们已经知道要写一个继承自bt.Strategy的类。首先我们要明白重构哪些函数？这些函数的执行顺序是怎么样的？
 
-### 信息点
+下图描绘的是调用的顺序过程：
 
-len(self)
+![image-20201130170524360](5 引擎和策略（Cerebro & Strategy）.assets/image-20201130170524360.png)
+
+首先是init函数，通常我们会在此把所需要的数据完成计算，如先运算移动平均线等。
+
+start()和stop()函数提供了整个大循环开始前和结束后的处理可能。比如我们可以在start()中模拟原始持仓情况，在stop()中把所有仓位平仓。
+
+next()是最核心的函数，每一个bar生成后都会调用next()，这里可以写真正的交易逻辑。
+
+prenext()是为哪些窗口函数准备的。比如我们在init()中计算一个20日的移动平均线，所以在回测开始的前19个交易日都不应进行逻辑处理，所以bt在前19个周期中调用prenext()函数，等到第20个周期才开始调用next()。
+
+### 信息点 访问回测数据
+
+在Cerebro中加载了回测数据DataFeed，在策略中可通过self.data访问数据。
+
+有集中方式可访问数据：
+
+- self.datas：是一个list，存放加载的多个Datafeed对象；
+- self.data0 / self.data：是第一个DataFeed对象的引用；
+
+每个DataFeed可通过索引访问，索引从0开始标识当前周期的数据，-1表示上一日的数据。为避免未来函数，索引不能为正数，即不能访问后续周期的数据。
+
+
+
+#### len(self) 明确周期数
+
+代码中可以通过len(self)确定目前是第几个周期，从1开始计数。len(self)不管prenext还是next都会计数加一。
+
+下面是一个代码例子：
+
+```python
+class DoulbeSMAStrategy(bt.Strategy):
+    ...
+
+    def __init__(self):
+        self.sma = bt.indicators.SMA(self.datas[0].close, period=3)
+
+    def prenext(self):
+        self.log("prenext(), len(self)={0}".format(len(self)))
+
+    def next(self):
+        self.log("next(), len(self)={0}".format(len(self)))
+```
+
+其输出：
+
+```text
+2015-01-05, prenext(), len(self)=1
+2015-01-06, prenext(), len(self)=2
+2015-01-07, next(), len(self)=3
+2015-01-08, next(), len(self)=4
+2015-01-09, next(), len(self)=5
+```
 
 ### 策略参数
 
-定义和访问
+策略的参数可以在类参数params中定义，如：
+
+```python
+class DoulbeSMAStrategy(bt.Strategy):
+	...
+    params = {"short_window": 20, "long_window": 50}
+    ...
+```
+
+调用参数可通过以下两种方式：
+
+```python
+self.params.short_window
+self.p.short_window
+```
+
+除了在
+
+
+
+
+
+
+
+
 
 ### 观察者模式
 
@@ -20,8 +101,9 @@ notify_order(order)
 notify_trade(trade)
 notify_cashvalue(cash, value)
 
+## Broker交易商
 
-## Broker
+为模拟回测
 
 ### 现金
 
@@ -35,152 +117,6 @@ notify_cashvalue(cash, value)
 
 
 
-
-- Cerebro和相关组件关系
-- Cerebro.run
-- 策略类Strategy结构
-- 策略的执行顺序
-- data line的调用
-- 策略Signals技术
-- 数据的预加载
-- Broker
-  - 滑点
-  - 佣金
-
-## 策略的执行流程
-
-策略执行的过程中，Strategy实现类的各函数相应被调用，其调用顺序如下图所示：
-
-![image-20201130170524360](5 引擎和策略（Cerebro & Strategy）.assets/image-20201130170524360.png)
-
-说明：
-
-- 如在 __init__() 中计算了SMA等需要窗口时间的指标，如窗口期还未结束则调用prenext，结束了调用next。
-
-## 策略+分析器的执行流程
-
-当回测中既有策略（Strategy）也有分析器（Analyzer）的时候，各函数回测调用顺序如下图：
-
-![image-20201130174102919](5 引擎和策略（Cerebro & Strategy）.assets/image-20201130174102919.png)
-
-
-
-## 多个策略同时运行的情况
-
-Cerebro有addstrategy函数，可支持多个策略同时运行。多策略如何运行，先抛结论，后面有实现代码：
-
-- 一个Cerebro可以添加多个策略，run()后将返回多个结果的列表；
-- 在每个运行周期中，多个策略依次执行；
-- 由于Broker只有一个，多个策略共享一个资金池；
-- 分析器将在每个策略运行都都运行一次，即一个分析器可处理跨策略的性能。
-
-我们直接看代码效果：
-
 ```python
-import backtrader as bt
-import bc_study.tushare_csv_datafeed as ts_df
-from backtrader import Analyzer
 
-# 本案例中，将执行两个策略（策略A和策略B）、一个分析器
-
-# 策略A，3日买，5日卖
-class MyStrategy_A(bt.Strategy):
-
-    def log(self, text, dt=None):
-        ''' Logging function for this strategy'''
-        dt = dt or self.datas[0].datetime.date(0)
-        print('【策略A】%s, %s' % (dt.isoformat(), text))
-
-    def __init__(self):
-        self.log("__init__()")
-        self.dataopen = self.datas[0].open
-
-    def next(self):
-        # 输出当日价格
-        self.log('Open={0}, 昨Open={1}, 前Open={2}'.format(self.dataopen[0], self.dataopen[-1], self.dataopen[-2]))
-
-        day = len(self)
-        if day == 3:
-            self.buy()
-            self.log("A 买入")
-        elif day == 5:
-            self.close()
-            self.log("A 平仓")
-
-
-# 策略B，2日买，6日卖
-class MyStrategy_B(bt.Strategy):
-
-    def log(self, text, dt=None):
-        ''' Logging function for this strategy'''
-        dt = dt or self.datas[0].datetime.date(0)
-        print('【策略B】%s, %s' % (dt.isoformat(), text))
-
-    def __init__(self):
-        self.log("__init__()")
-        self.dataopen = self.datas[0].open
-
-    def next(self):
-        # 输出当日价格
-        self.log('Open={0}, 昨Open={1}, 前Open={2}'.format(self.dataopen[0], self.dataopen[-1], self.dataopen[-2]))
-
-        day = len(self)
-        if day == 2:
-            self.buy()
-            self.log("B 买入")
-        elif day == 6:
-            self.close()
-            self.log("B 平仓")
-
-
-# Analyzer A
-class MyAnalyzerA(Analyzer):
-
-    def log(self, txt, dt=None):
-        ''' Logging function for this strategy'''
-        dt = dt or self.datas[0].datetime.date(0)
-        print('【分析器A】%s, %s' % (dt.isoformat(), txt))
-
-    def next(self):
-        # 针对策略的调用
-        # self.log("策略对象的引用: {0}".format(self.strategy))
-
-        self.log("今日收盘价: {0}".format(self.datas[0].close[0]))
-
-    def get_analysis(self):
-        return "分析A结果"
-
-
-# 启动回测
-def engine_run():
-    # 初始化引擎
-    cerebro = bt.Cerebro()
-
-    # 给Cebro引擎添加策略
-    cerebro.addstrategy(MyStrategy_A)
-    cerebro.addstrategy(MyStrategy_B)
-
-    # Analyzer
-    cerebro.addanalyzer(MyAnalyzerA, _name='analyzer_a')
-
-    # 设置初始资金：
-    cerebro.broker.setcash(10000.0)
-
-    # 从csv文件加载数据
-    data = ts_df.get_csv_daily_data(stock_id="600016.SH", start="20190101", end="20190115")
-    cerebro.adddata(data)
-
-    print('初始市值: %.2f' % cerebro.broker.getvalue())
-    # 回测启动运行
-    result = cerebro.run()
-    print("回测运行返回值 = {0}".format(result))
-    print("LEN(返回值) = {0}".format(len(result)))
-    print('期末市值: %.2f' % cerebro.broker.getvalue())
-
-    # 分析器结果
-    print("分析器 A = {0}".format(result[0].analyzers.analyzer_a.get_analysis()))
-
-
-if __name__ == '__main__':
-    engine_run()
 ```

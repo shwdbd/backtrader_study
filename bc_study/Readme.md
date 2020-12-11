@@ -23,3 +23,4 @@
 | datafeed_create.py | 建立数据源示例 |
 | strategy_len_self.py | 试验len(self)的计算 |
 | strategy_params.py | 策略参数的访问 |
+| strategy_position.py | 头寸的访问 |

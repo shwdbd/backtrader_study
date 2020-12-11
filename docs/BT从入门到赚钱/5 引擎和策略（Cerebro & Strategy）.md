@@ -24,6 +24,14 @@ next()是最核心的函数，每一个bar生成后都会调用next()，这里�
 
 prenext()是为哪些窗口函数准备的。比如我们在init()中计算一个20日的移动平均线，所以在回测开始的前19个交易日都不应进行逻辑处理，所以bt在前19个周期中调用prenext()函数，等到第20个周期才开始调用next()。
 
+
+
+![image-20201208112711763](5 引擎和策略（Cerebro & Strategy）.assets/image-20201208112711763.png)
+
+
+
+
+
 ### 信息点 访问回测数据
 
 在Cerebro中加载了回测数据DataFeed，在策略中可通过self.data访问数据。
@@ -69,7 +77,7 @@ class DoulbeSMAStrategy(bt.Strategy):
 
 ### 策略参数
 
-策略的参数可以在类参数params中定义，如：
+参数化可保持代码的灵活性。backtrader的策略参数建议在类参数params中定义，如：
 
 ```python
 class DoulbeSMAStrategy(bt.Strategy):
@@ -78,38 +86,69 @@ class DoulbeSMAStrategy(bt.Strategy):
     ...
 ```
 
-调用参数可通过以下两种方式：
+调用参数可通过以下两种方式完成，其中 self.p是便捷用法：
 
 ```python
 self.params.short_window
 self.p.short_window
 ```
 
-除了在
+除了在策略定义中显示定义参数值外，可以在cerebro加载策略代码时，传入参数值，前提是该参数在策略代码中已定义：
 
+```python
+class DoulbeSMAStrategy(bt.Strategy):
+	...
+    params = {"window": 20, "p2": 1}
+    ...
 
-
-
-
-
-
-
+cerebro.addstrategy(DoulbeSMAStrategy, window=99, p2=10)
+```
 
 ### 观察者模式
 
-notify_order(order)
-notify_trade(trade)
-notify_cashvalue(cash, value)
+为监控策略运行情况，backtrader提供了三个监控函数，分别对于order状态、trade状态和现金便装情况进行监控：
+
+- notify_order(self, order)
+- notify_trade(self, trade)
+- notify_cashvalue(self, vaule)
+
+监控函数的用法、自定义开发监控将在后续篇章中讨论。
 
 ## Broker交易商
 
-为模拟回测
+为模拟市场行为，所以有了模拟交易商的 Broker，下面将讨论几个问题。
+
+
+
+### 回测结果
+
+一个Strategy返回一个result对象，N个Strategy返回result的list。
+
+
+
+
 
 ### 现金
 
+- 设置初始资金
+- 读取现有现金头寸、市值
+- 增加现金投入
+
 ### 滑点
 
+滑点的示例
+
 ### 手续费
+
+手续费的示例
+
+
+
+？手续费
+
+
+
+
 
 ### Position
 

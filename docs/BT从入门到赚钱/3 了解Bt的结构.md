@@ -21,6 +21,12 @@
 - Observer
 - Opimiter（优化器）
 
+![image-20201208181200648](3 了解Bt的结构.assets/image-20201208181200648.png)
+
+
+
+
+
 ### 核心1：Cerebro
 
 bt.Cerebro（西班牙语意“大脑”）类是回测的总引擎，是组织各个部件的总程序入口。

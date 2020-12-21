@@ -1,33 +1,19 @@
-# 番外3 目标订单
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@File    :   target_order.py
+@Time    :   2020/12/21 14:58:13
+@Author  :   Jeffrey Wang
+@Version :   1.0
+@Contact :   shwangjj@163.com
+@Desc    :   Target订单
 
-使用buy/sell/cancel下单外，按仓位目标下单也是常用的手段。这是就可以使用目标订单(Target Ordre)功能实现。
+逻辑：
+T1, 目标7
+T2，目标2
+T3，目标3
 
-目标订单根据目标不同分为数量订单（order_target_size）和比例订单（order_target_percent）两种。
-
-目标订单实际是buy/sell/cancel的组合使用，bt会根据此刻的持仓信息判断下单的方向和数量。
-
-以order_target_size为例，其实际下单数量(size) = target - position_size。下面是几个例子：
-
-|此刻头寸 | target | 实际执行 |
-|--|--|--|
-|0 |7|buy(7)|
-|3 |7|buy(7-3)|
-|-3 |7|buy(7--3)|
-|-3 |-2|buy(-2--3)|
-
-[官方参考文档](https://www.backtrader.com/docu/order_target/order_target/)
-
-## 试验代码
-
-在试验代码中，我们使用order_target_size下单，下单逻辑是：
-
-- T1, 目标7
-- T2，目标2
-- T3，目标3
-
-程序输出：
-
-```command
+执行结果：
 2015-01-05, 头寸：size=0
 2015-01-06, Order(oid=1)执行, 方向=0, 数量=7
 2015-01-06, 头寸：size=7
@@ -35,9 +21,8 @@
 2015-01-07, 头寸：size=2
 2015-01-08, Order(oid=3)执行, 方向=0, 数量=1
 2015-01-08, 头寸：size=3
-```
 
-```python
+'''
 import backtrader as bt
 import bc_study.tushare_csv_datafeed as ts_df
 
@@ -96,5 +81,3 @@ if __name__ == '__main__':
 
     # 回测启动运行
     cerebro.run()
-
-```

@@ -1,32 +1,18 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 '''
-@File    :   bt_process.py
-@Time    :   2021/02/23 10:03:05
+@File    :   read_lines_name.py
+@Time    :   2021/02/23 10:15:17
 @Author  :   Jeffrey Wang
 @Version :   1.0
 @Contact :   shwangjj@163.com
-@Desc    :   Bt回测执行流程
+@Desc    :   读取lines名称
 
-包括的函数：
-- init
-- next
-- prenext
-- startnext
+lines分为策略lines和数据lines两种。
+策略lines通过self.lines访问；数据lines通过self.data[x].lines访问。
+策略lines只有一个line：datatime
 
-输出：
-1. 控制台输出：
-初始账户价值: 200000.00
-2019-01-09, __init__()
-2019-01-02, prenext()
-2019-01-03, next()
-2019-01-04, next()
-2019-01-07, next()
-2019-01-08, next()
-2019-01-09, next()
-最终账户价值: 200000.00
-
-2. 图形输出
+lines的名称可通过 lines.getlinealiases() 访问，返回一个元组，如('close', 'low', 'high', 'open', 'volume', 'openinterest', 'datetime')
 
 '''
 import backtrader as bt
@@ -43,15 +29,12 @@ class DemoStrategy(bt.Strategy):
 
     def __init__(self):
         self.log("__init__()")
-
-    def prenext(self):
-        self.log("prenext()")
-
-    def nextstart(self):
-        self.log("prenext()")
+        self.log("策略lines：{0}".format(self.lines.getlinealiases()))
+        self.log("行情数据lines：{0}".format(self.datas[0].lines.getlinealiases()))
 
     def next(self):
         self.log("next()")
+        self.log(self.datetime.date())
 
 
 # 启动回测
@@ -63,13 +46,13 @@ def engine_run():
     # 设置初始资金：
     cerebro.broker.setcash(200000.0)
     # 从csv文件加载数据
-    data = data_tl.get_stock_daily(stock_id="600016.SH", start="20190101", end="20190110")
+    data = data_tl.get_stock_daily(stock_id="600016.SH", start="20190101", end="20190105")
     cerebro.adddata(data)
     print('初始账户价值: %.2f' % cerebro.broker.getvalue())
     # 回测启动运行
     cerebro.run()
     print('最终账户价值: %.2f' % cerebro.broker.getvalue())
-    cerebro.plot()
+    # cerebro.plot()
 
 
 if __name__ == '__main__':

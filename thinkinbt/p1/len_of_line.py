@@ -36,7 +36,6 @@ class DemoStrategy(bt.Strategy):
 
     def __init__(self):
         self.sma = bt.ind.MovingAverageSimple(self.datas[0].close, period=2)
-        pass
 
     def next(self):
         self.log("LEN(self) = {0}".format(len(self)))

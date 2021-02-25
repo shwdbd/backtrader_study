@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 '''
-@File    :   get_all_trades.py
-@Time    :   2021/02/24 19:59:48
+@File    :   get_trades_history.py
+@Time    :   2021/02/25 19:50:13
 @Author  :   Jeffrey Wang
 @Version :   1.0
 @Contact :   shwangjj@163.com
-@Desc    :   读取已经发生过的所有Trade
+@Desc    :   查看交易的详细历史明细
+
+查看构成Trade的每个详细执行Order步骤
+
 
 逻辑：
 1. 第一天，下单买100股，卖50股
 2. 第二天，昨日单执行，Trade1建立，然后再下50股卖单
-3. 第三天，昨日卖单执行，Trade1结束。再下100股卖单
-4. 第四天，昨日卖单执行，Trade2建立，再下100股买单
-5. 第五天，昨日买单执行，Trade2结束
-6. 第六天，输出所有Trade
+3. 第三天，昨日卖单执行，Trade1结束
+Trade关闭后输出所有历史步骤
 
 输出：
-1. 控制台输出
 初始账户价值: 200000.00
 2019-01-03, 买单执行, 5.63
 2019-01-03, 卖单执行, 5.63
@@ -25,10 +25,17 @@
 2019-01-04, 卖单执行, 5.64
 2019-01-04, Trade id = 1 (size=0)
 2019-01-04, 毛收益 0.50
-2019-01-07, 买单执行, 5.8
-2019-01-07, Trade id = 2 (size=100)
-最终账户价值: 199993.50
-
+操作1
+Trade状态:AutoOrderedDict([('status', 1), ('dt', 737062.9999999999), ('barlen', 0), ('size', 100), ('price', 5.63), ('value', 563.0), ('pnl', 0.0), ('pnlcomm', 0.0), ('tz', None)]) 
+Trade事件:AutoOrderedDict([('order', <backtrader.order.BuyOrder object at 0x000001E368AA4888>), ('size', 100), ('price', 5.63), ('commission', 0.0)])
+操作2
+Trade状态:AutoOrderedDict([('status', 1), ('dt', 737062.9999999999), ('barlen', 0), ('size', 50), ('price', 5.63), ('value', 281.5), ('pnl', 0.0), ('pnlcomm', 0.0), ('tz', None)])     
+Trade事件:AutoOrderedDict([('order', <backtrader.order.SellOrder object at 0x000001E368AA4948>), ('size', -50), ('price', 5.63), ('commission', 0.0)])
+操作3
+Trade状态:AutoOrderedDict([('status', 2), ('dt', 737063.9999999999), ('barlen', 1), ('size', 0), ('price', 5.63), ('value', 0.0), ('pnl', 0.49999999999998934)
+, ('pnlcomm', 0.49999999999998934), ('tz', None)])
+Trade事件:AutoOrderedDict([('order', <backtrader.order.SellOrder object at 0x000001E368AA4EC8>), ('size', -50), ('price', 5.64), ('commission', 0.0)])
+最终账户价值: 200000.50
 
 '''
 import backtrader as bt
@@ -60,20 +67,6 @@ class DemoStrategy(bt.Strategy):
         elif days == 2:
             # 第2天 20190103
             self.order = self.sell(size=50)
-            # self.log(self._trades[self.data0][0][0])
-        elif days == 3:
-            # 第3天 20190104
-            self.order = self.sell(size=100)
-        elif days == 4:
-            # 第4天 20190105
-            self.order = self.buy(size=100)
-
-    def stop(self):
-        # 输出所有的Trade：
-        self.log("所有的交易")
-        for t in self._trades[self.data][0]:    # tradeid=0的所有交易
-            self.log(t.ref)
-            print(t)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -89,14 +82,23 @@ class DemoStrategy(bt.Strategy):
 
     def notify_trade(self, trade):
         self.log("Trade id = {0} (size={1})".format(trade.ref, trade.size))
+
+        print(trade.status)
+        print(trade.getstatusname())
+
         if trade.isclosed:
             self.log("毛收益 %0.2f" % trade.pnl)
+            # 历史明细：
+            for idx, h in enumerate(trade.history):
+                print("操作{0}".format(idx+1))
+                print("Trade状态:{0}".format(h.status))
+                print("Trade事件:{0}".format(h.event))
 
 
 # 启动回测
 def engine_run():
     # 初始化引擎
-    cerebro = bt.Cerebro()
+    cerebro = bt.Cerebro(tradehistory=True)
     # 给Cebro引擎添加策略
     cerebro.addstrategy(DemoStrategy)
     # 设置初始资金：
